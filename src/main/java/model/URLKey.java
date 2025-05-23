@@ -1,9 +1,11 @@
 package model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
+import java.math.BigInteger;
 import java.sql.Timestamp;
 
 @Entity
@@ -14,6 +16,9 @@ public class URLKey extends PanacheEntity {
     private Timestamp data_criacao;
     private Timestamp data_atribuicao;
     private Timestamp valido_ate;
+
+    @Column(name = "numero_acessos")
+    private Long numeroAcessos = 0L;
 
 
     //construtores
@@ -62,5 +67,12 @@ public class URLKey extends PanacheEntity {
 
     public Timestamp getData_validade() {
         return valido_ate;
+    }
+
+    public Long getNumeroAcessos() {
+        return numeroAcessos;
+    }
+    public void addAcesso() {
+        this.numeroAcessos += 1;
     }
 }

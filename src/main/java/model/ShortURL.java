@@ -14,6 +14,9 @@ public class ShortURL extends PanacheEntity {
     @JoinColumn(name = "url_key_id", nullable = false, unique = true)
     public URLKey urlKey;
 
+    @Column(name = "numero_acessos")
+    private Long numeroAcessos;
+
     public String getOriginalUrl() {
         return originalUrl;
     }
@@ -28,5 +31,12 @@ public class ShortURL extends PanacheEntity {
 
     public void setUrlKey(URLKey urlKey) {
         this.urlKey = urlKey;
+    }
+
+    public Long getNumeroAcessos() {
+        return numeroAcessos;
+    }
+    public void addAcesso() {
+        this.numeroAcessos += 1;
     }
 }
