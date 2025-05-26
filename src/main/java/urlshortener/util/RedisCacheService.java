@@ -1,12 +1,10 @@
-package util;
+package urlshortener.util;
 
 import io.quarkus.redis.client.RedisClient;
-import io.quarkus.redis.client.RedisClientName;
 import io.vertx.redis.client.Response;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.util.Arrays;
 import java.util.List;
 
 @ApplicationScoped

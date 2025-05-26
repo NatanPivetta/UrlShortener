@@ -1,10 +1,10 @@
-package service;
+package urlshortener.service;
 
 import io.quarkus.scheduler.Scheduled;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import model.ShortURL;
-import util.RedisCacheService;
+import urlshortener.model.ShortURL;
+import urlshortener.util.RedisCacheService;
 
 import java.util.List;
 

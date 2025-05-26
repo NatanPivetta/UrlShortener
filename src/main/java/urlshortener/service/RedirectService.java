@@ -1,12 +1,12 @@
-package service;
+package urlshortener.service;
 
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
-import model.ShortURL;
-import model.URLKey;
-import util.RedisCacheService;
+import urlshortener.model.ShortURL;
+import urlshortener.model.URLKey;
+import urlshortener.util.RedisCacheService;
 
 
 import java.sql.Timestamp;

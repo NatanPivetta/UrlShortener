@@ -1,4 +1,4 @@
-package model;
+package urlshortener.model;
 
 import jakarta.persistence.*;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;

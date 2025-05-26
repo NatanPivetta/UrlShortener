@@ -1,12 +1,12 @@
-package model;
+package urlshortener.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import java.math.BigInteger;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "chaves")
@@ -15,7 +15,7 @@ public class URLKey extends PanacheEntity {
     private boolean status;
     private Timestamp data_criacao;
     private Timestamp data_atribuicao;
-    private Timestamp valido_ate;
+    private Timestamp data_validade;
 
     @Column(name = "numero_acessos")
     private Long numeroAcessos = 0L;
@@ -33,9 +33,6 @@ public class URLKey extends PanacheEntity {
         return data_atribuicao;
     }
 
-    public void setData_atribuicao(Timestamp data_atribuicao) {
-        this.data_atribuicao = data_atribuicao;
-    }
 
     public Timestamp getData_criacao() {
         return data_criacao;
@@ -49,9 +46,6 @@ public class URLKey extends PanacheEntity {
         return status;
     }
 
-    public void setStatus(boolean status) {
-        this.status = status;
-    }
 
     public String getChave() {
         return chave;
@@ -61,12 +55,9 @@ public class URLKey extends PanacheEntity {
         this.chave = chave;
     }
 
-    public void setData_validade(Timestamp timestamp) {
-        this.valido_ate = timestamp;
-    }
 
     public Timestamp getData_validade() {
-        return valido_ate;
+        return data_validade;
     }
 
     public Long getNumeroAcessos() {
@@ -74,5 +65,11 @@ public class URLKey extends PanacheEntity {
     }
     public void addAcesso() {
         this.numeroAcessos += 1;
+    }
+
+    public void ativar() {
+        this.status = true;
+        this.data_atribuicao = Timestamp.valueOf(LocalDateTime.now());
+        this.data_validade = Timestamp.valueOf(LocalDateTime.now().plusYears(1));
     }
 }
