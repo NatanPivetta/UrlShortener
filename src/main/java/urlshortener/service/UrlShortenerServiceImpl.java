@@ -4,6 +4,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
 import urlshortener.model.ShortURL;
 import urlshortener.model.URLKey;
 import urlshortener.repository.ShortUrlRepository;
@@ -32,11 +34,14 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
 
     @Override
     @Transactional
-    public ShortURL shortenUrl(String originalUrl) {
+    public Response shortenUrl(String originalUrl) {
 
         ShortURL existing = shortUrlRepository.findByOriginalUrl(originalUrl);
         if (existing != null) {
-            return existing;
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(existing)
+                    .build();
         }
 
         List<URLKey> availableKeys = urlKeyRepository.findAvailableKeys();
@@ -55,12 +60,15 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         ShortURL shortUrl = criarShortUrl(originalUrl, selectedKey);
         shortUrlRepository.persist(shortUrl);
 
-        return shortUrl;
+        return Response
+                .status(Response.Status.CREATED)
+                .entity(shortUrl)
+                .build();
     }
 
     @Override
     @Transactional
-    public ShortURL shortenUrlCustom(String originalUrl, String customKey) {
+    public Response shortenUrlCustom(String originalUrl, String customKey) {
 
         if (!customKey.matches("^[a-zA-Z0-9]{4,20}$")) {
             throw new WebApplicationException("Chave inválida. Use apenas letras e números (4-20 caracteres).", 400);
@@ -68,7 +76,10 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
 
         ShortURL existing = shortUrlRepository.findByOriginalUrl(originalUrl);
         if (existing != null) {
-            return existing;
+            return Response
+                    .status(Response.Status.OK)
+                    .entity(existing)
+                    .build();
         }
 
 
@@ -80,7 +91,10 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
 
         ShortURL shortUrl = criarShortUrl(originalUrl,customKeyURL);
         shortUrlRepository.persist(shortUrl);
-        return shortUrl;
+        return Response
+                .status(Response.Status.CREATED)
+                .entity(shortUrl)
+                .build();
     }
 
     private ShortURL criarShortUrl(String originalUrl, URLKey key) {

@@ -1,11 +1,12 @@
 package urlshortener.service;
 
 
+import jakarta.ws.rs.core.Response;
 import urlshortener.model.ShortURL;
 import urlshortener.model.URLKey;
 
 public interface UrlShortenerService {
-    ShortURL shortenUrl(String originalUrl);
+    Response shortenUrl(String originalUrl);
 
-    ShortURL shortenUrlCustom(String originalUrl, String customKey);
+    Response shortenUrlCustom(String originalUrl, String customKey);
 }
