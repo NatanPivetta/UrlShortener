@@ -9,6 +9,8 @@ import urlshortener.model.URLKey;
 import urlshortener.repository.ShortUrlRepository;
 import urlshortener.repository.UrlKeyRepository;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
@@ -56,10 +58,44 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         return shortUrl;
     }
 
+    @Override
+    @Transactional
+    public ShortURL shortenUrlCustom(String originalUrl, String customKey) {
+
+        if (!customKey.matches("^[a-zA-Z0-9]{4,20}$")) {
+            throw new WebApplicationException("Chave inválida. Use apenas letras e números (4-20 caracteres).", 400);
+        }
+
+        ShortURL existing = shortUrlRepository.findByOriginalUrl(originalUrl);
+        if (existing != null) {
+            return existing;
+        }
+
+
+        URLKey customKeyURL = urlKeyRepository.findByKey(customKey);
+        if(customKeyURL == null) {
+            customKeyURL = criarUrlKey(customKey);
+
+        }
+
+        ShortURL shortUrl = criarShortUrl(originalUrl,customKeyURL);
+        shortUrlRepository.persist(shortUrl);
+        return shortUrl;
+    }
+
     private ShortURL criarShortUrl(String originalUrl, URLKey key) {
         ShortURL shortUrl = new ShortURL();
         shortUrl.setOriginalUrl(originalUrl);
         shortUrl.setUrlKey(key);
         return shortUrl;
+    }
+
+    private URLKey criarUrlKey(String customKey ) {
+        URLKey customKeyURL = new URLKey();
+        customKeyURL.setChave(customKey);
+        customKeyURL.ativar();
+        customKeyURL.setData_criacao(Timestamp.valueOf(LocalDateTime.now()));
+        urlKeyRepository.save(customKeyURL);
+        return customKeyURL;
     }
 }

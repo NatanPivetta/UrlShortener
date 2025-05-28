@@ -15,4 +15,17 @@ public class UrlKeyRepository implements PanacheRepository<URLKey> {
     public List<URLKey> findAvailableKeys() {
         return find("status = false").list();
     }
+
+    public URLKey findByKey(String key) {
+        List<URLKey> keylist = find("chave = ?1", key).list();
+
+        if(keylist.isEmpty()) {
+            return null;
+        }
+        return keylist.getFirst();
+    }
+
+    public void save(URLKey key) {
+        key.persist();
+    }
 }

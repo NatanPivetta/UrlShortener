@@ -24,8 +24,8 @@ public class RedirectService {
     @Transactional
     public Response redirect(@PathParam("chave") String chave) {
 
-        URLKey urlKey = null;
-        ShortURL shortUrl = null;
+        URLKey urlKey;
+        ShortURL shortUrl;
 
         String cachedUrl = cache.get(chave);
         if (cachedUrl != null) {

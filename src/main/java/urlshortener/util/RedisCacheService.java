@@ -1,28 +1,35 @@
 package urlshortener.util;
 
-import io.quarkus.redis.client.RedisClient;
-import io.vertx.redis.client.Response;
+
 import jakarta.enterprise.context.ApplicationScoped;
+import io.quarkus.redis.datasource.RedisDataSource;
+import io.quarkus.redis.datasource.value.ValueCommands;
 import jakarta.inject.Inject;
 
-import java.util.List;
 
 @ApplicationScoped
 public class RedisCacheService {
 
+
+
+    ValueCommands<String, String> commands;
+
     @Inject
-    RedisClient redisClient;
+    public RedisCacheService(RedisDataSource redisDataSource) {
+        this.commands = redisDataSource.value(String.class);
+    }
+
+
 
     public void put(String chave, String url) {
-        redisClient.setex("url:" + chave, "86400", url);
+        commands.setex("url: " + chave,86400 , url);
     }
 
     public String get(String chave) {
-        Response response = redisClient.get("url:" + chave);
-        return response == null ? null : response.toString();
+        return commands.get("url:" + chave);
     }
 
     public void delete(String chave) {
-        redisClient.del(List.of("url:" + chave));
+        commands.getdel("url:" + chave);
     }
 }

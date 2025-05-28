@@ -19,4 +19,11 @@ public class UrlShortenerController {
     public ShortURL shorten(String originalUrl) {
         return service.shortenUrl(originalUrl);
     }
+
+    @POST
+    @Path("/custom")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ShortURL customShorten(@FormParam("originalUrl") String originalUrl, @FormParam("customKey") String customKey) {
+        return service.shortenUrlCustom(originalUrl, customKey);
+    }
 }
