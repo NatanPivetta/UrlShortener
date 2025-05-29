@@ -6,6 +6,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import urlshortener.model.ShortURL;
 import urlshortener.service.UrlShortenerService;
+import urlshortener.util.UrlRequest;
 
 @Path("/shortener")
 @Consumes(MediaType.TEXT_PLAIN)
@@ -17,14 +18,21 @@ public class UrlShortenerController {
 
     @POST
     @Path("/shorten")
-    public Response shorten(String originalUrl) {
-        return service.shortenUrl(originalUrl);
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response shortenUrl(UrlRequest request) {
+        if (request.originalUrl == null || request.originalUrl.isBlank()) {
+            return Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .entity("URL original é obrigatória")
+                    .build();
+        }
+
+        if (request.customKey != null && !request.customKey.isBlank()) {
+            return service.shortenUrlCustom(request.originalUrl, request.customKey);
+        } else {
+            return service.shortenUrl(request.originalUrl);
+        }
     }
 
-    @POST
-    @Path("/custom")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response customShorten(@FormParam("originalUrl") String originalUrl, @FormParam("customKey") String customKey) {
-        return service.shortenUrlCustom(originalUrl, customKey);
-    }
 }
