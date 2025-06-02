@@ -1,14 +1,21 @@
 package urlshortener.util;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Properties;
 
+@ApplicationScoped
 public class AccessKafkaProducer {
 
     KafkaProducer<String, String> producer;
+
+    @ConfigProperty(name = "kafka.bootstrap.servers")
+    String bootstrapServers;
 
 
     public AccessKafkaProducer() {
@@ -20,5 +27,7 @@ public class AccessKafkaProducer {
         producer = new KafkaProducer<>(props);
     }
 
-    public void send(String topic, String message) {}
+    public void send(String topic, String chave, String message) {
+        producer.send(new ProducerRecord<>(topic, chave, message));
+    }
 }

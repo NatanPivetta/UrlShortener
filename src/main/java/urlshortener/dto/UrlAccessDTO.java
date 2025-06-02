@@ -6,5 +6,6 @@ public class UrlAccessDTO {
     public String ip;
     public String userAgent;
     public String responseCode;
+    public String method;
 }
 
