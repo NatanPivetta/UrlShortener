@@ -2,23 +2,18 @@ package service;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import urlshortener.service.KeyGeneratorService;
 
 @QuarkusTest
 public class UrlShortenerLoadTest {
 
+    @Inject
+    KeyGeneratorService kgs;
+
     @Test
     public void testGenerateMultipleShortUrls() {
-        for (int i = 1; i <= 2989; i++) {
-            String originalUrl = "https://url" + i + ".com/";
-
-            RestAssured.given()
-                    .contentType("text/plain")
-                    .body(originalUrl)
-                    .when()
-                    .post("/shortener/shorten")
-                    .then()
-                    .statusCode(200);
-        }
+        kgs.generateKeys(10000);
     }
 }

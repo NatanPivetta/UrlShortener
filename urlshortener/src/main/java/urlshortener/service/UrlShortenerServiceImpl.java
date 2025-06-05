@@ -72,6 +72,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     @Override
     @Transactional
     public Response shortenUrlCustom(String originalUrl, String customKey) {
+        System.out.println(customKey);
 
         if (!customKey.matches("^[a-zA-Z0-9]{4,20}$")) {
             throw new WebApplicationException("Chave inválida. Use apenas letras e números (4-20 caracteres).", 400);

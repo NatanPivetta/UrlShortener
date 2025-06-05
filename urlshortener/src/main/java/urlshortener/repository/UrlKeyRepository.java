@@ -9,9 +9,7 @@ import java.util.List;
 @ApplicationScoped
 public class UrlKeyRepository implements PanacheRepository<URLKey> {
 
-    /**
-     * Retorna todas as chaves disponíveis (status = false)
-     */
+
     public List<URLKey> findAvailableKeys() {
         return find("status = false").list();
     }
@@ -23,6 +21,11 @@ public class UrlKeyRepository implements PanacheRepository<URLKey> {
             return null;
         }
         return keylist.getFirst();
+    }
+
+    public boolean existsByKey(String key) {
+        boolean exists = findByKey(key) != null;
+        return exists;
     }
 
     public void save(URLKey key) {
