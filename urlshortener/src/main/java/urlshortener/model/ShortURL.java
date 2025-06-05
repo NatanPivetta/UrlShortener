@@ -8,11 +8,11 @@ import io.quarkus.hibernate.orm.panache.PanacheEntity;
 public class ShortURL extends PanacheEntity {
 
     @Column(nullable = false, name="original_url")
-    public String originalUrl;
+    private String originalUrl;
 
     @ManyToOne
     @JoinColumn(name = "url_key_id", nullable = false, unique = true)
-    public URLKey urlKey;
+    private URLKey urlKey;
 
     @Column(name = "numero_acessos")
     private Long numeroAcessos = 0L;

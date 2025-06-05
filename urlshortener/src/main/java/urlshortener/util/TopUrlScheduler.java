@@ -25,7 +25,7 @@ public class TopUrlScheduler {
         List<ShortURL> top20Percent = topUrls.subList(0, topCount);
 
         for (ShortURL url : top20Percent) {
-            redis.put(url.urlKey.getChave(), url.originalUrl);
+            redis.put(url.getUrlKey().getChave(), url.getOriginalUrl());
         }
 
         // System.out.println("Cache atualizado com top " + topCount + " URLs ativas mais acessadas");

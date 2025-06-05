@@ -2,17 +2,22 @@ package consumers;
 
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import kafka.AccessEvent;
 import model.ShortURL;
 import model.URLKey;
+import model.UrlAccess;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import io.smallrye.reactive.messaging.annotations.Blocking;
-
+import repository.UrlAccessRepository;
 
 
 @ApplicationScoped
 public class AccessConsumer {
+
+    @Inject
+    UrlAccessRepository accessRepository;
 
 
     @Incoming("url-access")
@@ -32,7 +37,9 @@ public class AccessConsumer {
                 shortUrl.addAcesso();
                 shortUrl.persist();
             }
-
+            UrlAccess access = new UrlAccess();
+            access.setEvent(event);
+            accessRepository.save(access);
         }
     }
 }

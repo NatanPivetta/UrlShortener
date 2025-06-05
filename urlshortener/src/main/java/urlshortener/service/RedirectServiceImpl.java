@@ -41,6 +41,7 @@ public class RedirectServiceImpl implements RedirectService {
         }
 
         UrlAccessDTO dto = new UrlAccessDTO();
+        dto.timestamp = new Timestamp(System.currentTimeMillis());
         dto.chave = chave;
         dto.method = request.getMethod();
         dto.ip = headers.getHeaderString("X-Forwarded-For");
@@ -77,7 +78,7 @@ public class RedirectServiceImpl implements RedirectService {
                     statusCode = Response.Status.NOT_FOUND.getStatusCode();
                     errorMessage = "URL encurtada não encontrada";
                 } else {
-                    location = shortUrl.originalUrl;
+                    location = shortUrl.getOriginalUrl();
                     statusCode = Response.Status.FOUND.getStatusCode();
                 }
             }
