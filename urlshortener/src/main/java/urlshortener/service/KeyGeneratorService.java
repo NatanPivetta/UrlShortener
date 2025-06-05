@@ -31,7 +31,7 @@ public class KeyGeneratorService {
     @Transactional
     public void generateKeys(int quantidade) {
         URLKey ultimaChave = URLKey.find("ORDER BY id DESC").firstResult();
-        long startId = (ultimaChave == null) ? 1000000L : 1000000L + ultimaChave.id + 1;
+        long startId = (ultimaChave == null) ? 1000000L : 1000000L + ultimaChave.id;
 
 
         for (int i = 0; i < quantidade; i++) {
@@ -41,6 +41,7 @@ public class KeyGeneratorService {
                 urlKey.setChave(key);
                 urlKey.setData_criacao(Timestamp.valueOf(LocalDateTime.now()));
                 urlKey.persist();
+                System.out.println("Chave gerada: " + urlKey.getChave());
             }else{
                 System.out.println("Chave " + key + "Já existe");
             }

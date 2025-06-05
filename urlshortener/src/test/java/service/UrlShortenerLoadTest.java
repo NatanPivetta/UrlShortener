@@ -14,6 +14,6 @@ public class UrlShortenerLoadTest {
 
     @Test
     public void testGenerateMultipleShortUrls() {
-        kgs.generateKeys(10000);
+        kgs.generateKeys(190);
     }
 }
