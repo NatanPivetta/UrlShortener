@@ -101,10 +101,40 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public Response unlink(String chave){
+
+        URLKey key = urlKeyRepository.findByKey(chave);
+        if (key == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Chave não encontrada")
+                    .build();
+        }
+
+        ShortURL shortURL = shortUrlRepository.findByKey(chave);
+        if (shortURL == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Url não encontrada")
+                    .build();
+        }
+
+        shortURL.desativar();
+        shortUrlRepository.save(shortURL);
+
+        key.desativar();
+        urlKeyRepository.save(key);
+
+        return Response.ok()
+                .entity("Chave e URL desassociadas")
+                .build();
+    }
+
     private ShortURL criarShortUrl(String originalUrl, URLKey key) {
         ShortURL shortUrl = new ShortURL();
         shortUrl.setOriginalUrl(originalUrl);
         shortUrl.setUrlKey(key);
+        shortUrl.ativar();
         return shortUrl;
     }
 

@@ -17,6 +17,8 @@ public class ShortURL extends PanacheEntity {
     @Column(name = "numero_acessos")
     private Long numeroAcessos = 0L;
 
+    private boolean status;
+
     public String getOriginalUrl() {
         return originalUrl;
     }
@@ -39,4 +41,7 @@ public class ShortURL extends PanacheEntity {
     public void addAcesso() {
         this.numeroAcessos += 1;
     }
+
+    public void ativar(){this.status = true;}
+    public void desativar(){this.status = false;}
 }

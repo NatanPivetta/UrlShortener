@@ -72,4 +72,5 @@ public class URLKey extends PanacheEntity {
         this.data_atribuicao = Timestamp.valueOf(LocalDateTime.now());
         this.data_validade = Timestamp.valueOf(LocalDateTime.now().plusYears(1));
     }
+    public void desativar(){this.status = false;}
 }

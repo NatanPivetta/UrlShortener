@@ -7,4 +7,6 @@ public interface UrlShortenerService {
     Response shortenUrl(String originalUrl);
 
     Response shortenUrlCustom(String originalUrl, String customKey);
+
+    Response unlink(String chave);
 }
