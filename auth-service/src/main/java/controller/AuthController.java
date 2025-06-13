@@ -12,6 +12,7 @@ import jakarta.ws.rs.core.Response;
 import model.Role;
 import model.User;
 import repository.UserRepository;
+import security.JWTUtils;
 import service.PasswordService;
 
 @Path("/auth")
@@ -24,6 +25,9 @@ public class AuthController {
 
     @Inject
     UserRepository userRepository;
+
+    @Inject
+    JWTUtils jwt;
 
     @POST
     @Path("/register")
@@ -43,5 +47,22 @@ public class AuthController {
         return Response.status(Response.Status.CREATED)
                 .entity("Usuário Registrado com sucesso")
                 .build();
+    }
+
+    @POST
+    @Path("/login")
+    @Transactional
+    public Response login(RegisterRequest registerRequest) {
+        User user = userRepository.findByEmail(registerRequest.email);
+        if (user == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        }
+        if(passwordService.checkPassword(registerRequest.password, user.passwordHash)) {
+                return Response.status(Response.Status.OK)
+                        .entity(jwt.generateToken(user))
+                        .build();
+        }
+        return Response.status(Response.Status.UNAUTHORIZED).build();
+
     }
 }
