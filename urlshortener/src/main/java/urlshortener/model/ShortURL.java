@@ -17,6 +17,8 @@ public class ShortURL extends PanacheEntity {
     @Column(name = "numero_acessos")
     private Long numeroAcessos = 0L;
 
+    public String userEmail;
+
     private boolean status;
 
     public String getOriginalUrl() {

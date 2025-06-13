@@ -37,7 +37,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
 
     @Override
     @Transactional
-    public Response shortenUrl(String originalUrl) {
+    public Response shortenUrl(String originalUrl, String userEmail) {
 
         ShortURL existing = shortUrlRepository.findByOriginalUrl(originalUrl);
         if (existing != null) {
@@ -71,7 +71,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
 
     @Override
     @Transactional
-    public Response shortenUrlCustom(String originalUrl, String customKey) {
+    public Response shortenUrlCustom(String originalUrl, String customKey, String userEmail) {
         System.out.println(customKey);
 
         if (!customKey.matches("^[a-zA-Z0-9]{4,20}$")) {
