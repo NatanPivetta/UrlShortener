@@ -1,16 +1,17 @@
 package controller;
 
 import dto.RegisterRequest;
+import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 import model.Role;
 import model.User;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import repository.UserRepository;
 import security.JWTUtils;
 import service.PasswordService;
@@ -29,6 +30,9 @@ public class AuthController {
     @Inject
     JWTUtils jwt;
 
+    @Inject
+    JsonWebToken jwtd;
+
     @POST
     @Path("/register")
     @Transactional
@@ -41,8 +45,8 @@ public class AuthController {
         User user = new User();
         user.email =  registerRequest.email;
         user.passwordHash = passwordService.hashPassword(registerRequest.password);
-        user.persist();
         user.roles.add(Role.FREE); // padrão
+        user.persist();
 
         return Response.status(Response.Status.CREATED)
                 .entity("Usuário Registrado com sucesso")
@@ -65,4 +69,15 @@ public class AuthController {
         return Response.status(Response.Status.UNAUTHORIZED).build();
 
     }
+
+    @GET
+    @Path("/jwt-debug")
+    @Authenticated
+    public String debugJwt() {
+        if (jwtd == null) {
+            return "JWT is null!";
+        }
+        return "JWT Subject: " + jwtd.getSubject() + "\nUPN: " + jwtd.getClaim("upn") + "\nGroups: " + jwtd.getGroups();
+    }
+
 }

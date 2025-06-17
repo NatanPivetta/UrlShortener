@@ -17,7 +17,9 @@ public class ShortURL extends PanacheEntity {
     @Column(name = "numero_acessos")
     private Long numeroAcessos = 0L;
 
-    public String userEmail;
+    @ManyToOne
+    @JoinColumn(name="user_id")
+    public User user;
 
     private boolean status;
 

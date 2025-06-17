@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import urlshortener.model.ShortURL;
 import urlshortener.model.URLKey;
+import urlshortener.model.User;
 import urlshortener.repository.ShortUrlRepository;
 import urlshortener.repository.UrlKeyRepository;
 
@@ -37,7 +38,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
 
     @Override
     @Transactional
-    public Response shortenUrl(String originalUrl, String userEmail) {
+    public Response shortenUrl(String originalUrl, User user) {
 
         ShortURL existing = shortUrlRepository.findByOriginalUrl(originalUrl);
         if (existing != null) {
@@ -60,8 +61,8 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
         URLKey selectedKey = availableKeys.get(random.nextInt(availableKeys.size()));
         selectedKey.ativar();
 
-        ShortURL shortUrl = criarShortUrl(originalUrl, selectedKey);
-        shortUrlRepository.persist(shortUrl);
+        ShortURL shortUrl = criarShortUrl(originalUrl, selectedKey, user);
+        shortUrlRepository.save(shortUrl);
 
         return Response
                 .status(Response.Status.CREATED)
@@ -71,7 +72,7 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
 
     @Override
     @Transactional
-    public Response shortenUrlCustom(String originalUrl, String customKey, String userEmail) {
+    public Response shortenUrlCustom(String originalUrl, String customKey, User user) {
         System.out.println(customKey);
 
         if (!customKey.matches("^[a-zA-Z0-9]{4,20}$")) {
@@ -93,8 +94,8 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
 
         }
 
-        ShortURL shortUrl = criarShortUrl(originalUrl,customKeyURL);
-        shortUrlRepository.persist(shortUrl);
+        ShortURL shortUrl = criarShortUrl(originalUrl,customKeyURL, user);
+        shortUrlRepository.save(shortUrl);
         return Response
                 .status(Response.Status.CREATED)
                 .entity(shortUrl)
@@ -130,10 +131,11 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
                 .build();
     }
 
-    private ShortURL criarShortUrl(String originalUrl, URLKey key) {
+    private ShortURL criarShortUrl(String originalUrl, URLKey key, User user) {
         ShortURL shortUrl = new ShortURL();
         shortUrl.setOriginalUrl(originalUrl);
         shortUrl.setUrlKey(key);
+        shortUrl.user = user;
         shortUrl.ativar();
         return shortUrl;
     }

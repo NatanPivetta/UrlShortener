@@ -15,12 +15,13 @@ public class ShortUrlRepository implements PanacheRepository<ShortURL> {
         return find("urlKey.chave = ?1", chave).firstResult();
     }
 
-    public long countUrlsByUser(String email) {
-        return count("userEmail", email);
-    }
-
-
     public void save(ShortURL shortUrl) {
         shortUrl.persist();
     }
+
+    public long countByUserId(Long userId) {
+        return count("user.id", userId);
+    }
+
+
 }

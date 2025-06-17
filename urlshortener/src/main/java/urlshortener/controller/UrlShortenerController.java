@@ -1,6 +1,6 @@
 package urlshortener.controller;
 
-import jakarta.annotation.security.RolesAllowed;
+import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -8,18 +8,15 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-import urlshortener.model.Role;
-import urlshortener.model.ShortURL;
-import urlshortener.model.URLKey;
+import urlshortener.model.User;
 import urlshortener.repository.ShortUrlRepository;
 import urlshortener.repository.UrlKeyRepository;
+import urlshortener.repository.UserRepository;
 import urlshortener.service.UrlShortenerService;
 import urlshortener.util.UrlRequest;
 
-import java.util.Set;
-
 @Path("/shortener")
-@Consumes(MediaType.TEXT_PLAIN)
+@Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UrlShortenerController {
 
@@ -32,17 +29,25 @@ public class UrlShortenerController {
     @Inject
     ShortUrlRepository shortUrlRepository;
 
+    @Inject
+    UserRepository userRepository;
+
     @POST
     @Path("/shorten")
-    @RolesAllowed({"free", "silver", "gold"})
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Authenticated
     public Response shortenUrl(UrlRequest request, @Context SecurityContext ctx) {
-        String userEmail = ctx.getUserPrincipal().getName();
+        if (ctx.getUserPrincipal() == null) {
+            System.out.println("User: " + ctx.getUserPrincipal());
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Usuário não autenticado").build();
+        }
 
-        String role = ctx.isUserInRole("gold") ? "gold"
-                : ctx.isUserInRole("silver") ? "silver"
-                : "free";
+        String userEmail = ctx.getUserPrincipal().getName();
+        User user = userRepository.findByEmail(userEmail);
+        String role = ctx.isUserInRole("GOLD") ? "GOLD"
+                : ctx.isUserInRole("SILVER") ? "SILVER"
+                : "FREE";
 
         if (request.originalUrl == null || request.originalUrl.isBlank()) {
             return Response
@@ -59,9 +64,9 @@ public class UrlShortenerController {
         }
 
         if (request.customKey != null && !request.customKey.isBlank()) {
-            return service.shortenUrlCustom(request.originalUrl, request.customKey, request.userEmail);
+            return service.shortenUrlCustom(request.originalUrl, request.customKey, user);
         } else {
-            return service.shortenUrl(request.originalUrl, request.userEmail);
+            return service.shortenUrl(request.originalUrl, user);
         }
     }
 
@@ -75,12 +80,28 @@ public class UrlShortenerController {
     }
 
 
+    @GET
+    @Path("/testeauth")
+    @Authenticated
+    @Produces(MediaType.APPLICATION_JSON)
+    public String testAuth(@Context SecurityContext ctx) {
+        return "Usuário autenticado: " + ctx.getUserPrincipal().getName();
+    }
+
+
+
+
     private boolean countUrls(String userEmail, String role){
-        long userUrlCount = shortUrlRepository.countUrlsByUser(userEmail);
+        User user = userRepository.findByEmail(userEmail);
+        if (user == null) {
+            return false;
+        }
+
+        long userUrlCount = shortUrlRepository.countByUserId(user.id);
 
         int maxAllowed = switch (role) {
-            case "gold" -> 50;
-            case "silver" -> 10;
+            case "GOLD" -> 50;
+            case "SILVER" -> 10;
             default -> 5;
         };
 
