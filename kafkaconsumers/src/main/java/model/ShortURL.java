@@ -1,21 +1,29 @@
 package model;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import model.URLKey;
+import model.User;
 
 @Entity
 @Table(name= "short_url")
 public class ShortURL extends PanacheEntity {
 
     @Column(nullable = false, name="original_url")
-    public String originalUrl;
+    private String originalUrl;
 
     @ManyToOne
     @JoinColumn(name = "url_key_id", nullable = false, unique = true)
-    public URLKey urlKey;
+    private URLKey urlKey;
 
     @Column(name = "numero_acessos")
     private Long numeroAcessos = 0L;
+
+    @ManyToOne
+    @JoinColumn(name="user_id")
+    public User user;
+
+    private boolean status;
 
     public String getOriginalUrl() {
         return originalUrl;
@@ -39,4 +47,7 @@ public class ShortURL extends PanacheEntity {
     public void addAcesso() {
         this.numeroAcessos += 1;
     }
+
+    public void ativar(){this.status = true;}
+    public void desativar(){this.status = false;}
 }

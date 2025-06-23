@@ -1,6 +1,8 @@
 package controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dto.RegisterRequest;
+import dto.UserDTO;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -15,6 +17,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import repository.UserRepository;
 import security.JWTUtils;
 import service.PasswordService;
+import util.UserKafkaProducer;
 
 @Path("/auth")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -33,6 +36,11 @@ public class AuthController {
     @Inject
     JsonWebToken jwtd;
 
+    @Inject
+    UserKafkaProducer producer;
+
+    ObjectMapper objectMapper = new ObjectMapper();
+
     @POST
     @Path("/register")
     @Transactional
@@ -42,11 +50,18 @@ public class AuthController {
                     .entity("Email já cadastrado")
                     .build();
         }
-        User user = new User();
-        user.email =  registerRequest.email;
-        user.passwordHash = passwordService.hashPassword(registerRequest.password);
-        user.roles.add(Role.FREE); // padrão
-        user.persist();
+        UserDTO dto = new UserDTO();
+        dto.userEmail =  registerRequest.email;
+        dto.passwordHash = passwordService.hashPassword(registerRequest.password);
+        dto.roles.add(Role.FREE.name()); // padrão
+
+        try{
+            String json = objectMapper.writeValueAsString(dto);
+            producer.send("user-register", json);
+            System.out.println("Mensagem enviada ao Kafka: " + json);
+        }catch (Exception e){
+            System.err.println("Erro ao converter User para JSON: " + e.getMessage());
+        }
 
         return Response.status(Response.Status.CREATED)
                 .entity("Usuário Registrado com sucesso")

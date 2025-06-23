@@ -16,7 +16,7 @@ public class JWTUtils {
                 .upn(user.email)
                 .subject(user.email)
                 .groups(user.roles.stream().map(Enum::name).collect(java.util.stream.Collectors.toSet()))
-                .expiresIn(Duration.ofHours(1))
+                .expiresIn(Duration.ofHours(24))
                 .sign();
     }
 }

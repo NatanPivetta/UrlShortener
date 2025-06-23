@@ -38,9 +38,22 @@ public class UrlShortenerController {
     @Produces(MediaType.APPLICATION_JSON)
     @Authenticated
     public Response shortenUrl(UrlRequest request, @Context SecurityContext ctx) {
+
+
         if (ctx.getUserPrincipal() == null) {
             System.out.println("User: " + ctx.getUserPrincipal());
             return Response.status(Response.Status.UNAUTHORIZED).entity("Usuário não autenticado").build();
+        }
+
+        if(shortUrlRepository.findByOriginalUrl(request.originalUrl)  != null){
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("Url já encurtada no sistema: " + request.originalUrl)
+                    .build();
+        }
+        if(urlKeyRepository.findByKey(request.customKey)  != null){
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("Chave já utilizada no sistema: " + request.customKey)
+                    .build();
         }
 
         String userEmail = ctx.getUserPrincipal().getName();
@@ -105,7 +118,7 @@ public class UrlShortenerController {
             default -> 5;
         };
 
-        return userUrlCount <= maxAllowed;
+        return userUrlCount < maxAllowed;
     }
 
 

@@ -1,5 +1,4 @@
-package urlshortener.model;
-
+package model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.*;
@@ -25,5 +24,4 @@ public class User extends PanacheEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     public Set<Role> roles = new HashSet<>();
-
 }
