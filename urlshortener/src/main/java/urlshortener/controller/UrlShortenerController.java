@@ -8,10 +8,12 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
+import model.Role;
 import urlshortener.model.User;
 import urlshortener.repository.ShortUrlRepository;
 import urlshortener.repository.UrlKeyRepository;
 import urlshortener.repository.UserRepository;
+import urlshortener.service.KeyGeneratorService;
 import urlshortener.service.UrlShortenerService;
 import urlshortener.util.UrlRequest;
 
@@ -32,6 +34,10 @@ public class UrlShortenerController {
     @Inject
     UserRepository userRepository;
 
+    @Inject
+    KeyGeneratorService kgs;
+
+
     @POST
     @Path("/shorten")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -39,6 +45,14 @@ public class UrlShortenerController {
     @Authenticated
     public Response shortenUrl(UrlRequest request, @Context SecurityContext ctx) {
 
+        System.out.println("originalUrl: " + request.originalUrl);
+        System.out.println("customKey: " + request.customKey);
+
+
+
+        if(urlKeyRepository.findAvailableKeys().size() < 1000){
+            kgs.generateKeys(1000);
+        }
 
         if (ctx.getUserPrincipal() == null) {
             System.out.println("User: " + ctx.getUserPrincipal());
@@ -58,8 +72,8 @@ public class UrlShortenerController {
 
         String userEmail = ctx.getUserPrincipal().getName();
         User user = userRepository.findByEmail(userEmail);
-        String role = ctx.isUserInRole("GOLD") ? "GOLD"
-                : ctx.isUserInRole("SILVER") ? "SILVER"
+        String role = user.roles.contains(Role.GOLD) ? "GOLD"
+                : user.roles.contains(Role.SILVER) ? "SILVER"
                 : "FREE";
 
         if (request.originalUrl == null || request.originalUrl.isBlank()) {
@@ -105,6 +119,7 @@ public class UrlShortenerController {
 
 
     private boolean countUrls(String userEmail, String role){
+        System.out.println(userEmail + " - " + role);
         User user = userRepository.findByEmail(userEmail);
         if (user == null) {
             return false;
