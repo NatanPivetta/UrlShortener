@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import model.Role;
+import model.ShortURL;
 import model.TokenResponse;
 import model.User;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -23,6 +24,7 @@ import security.JWTUtils;
 import service.PasswordService;
 import util.UserKafkaProducer;
 
+import java.util.Collections;
 import java.util.List;
 
 @Path("/auth")
@@ -88,7 +90,6 @@ public class AuthController {
         }
         if(passwordService.checkPassword(registerRequest.password, user.passwordHash)) {
             TokenResponse tk = new TokenResponse(jwt.generateToken(user));
-            System.out.println("Token: " + tk.token);
                 return Response.status(Response.Status.OK)
                         .entity(tk)
                         .build();
@@ -104,9 +105,15 @@ public class AuthController {
     public Response getCurrentUser(@Context SecurityContext securityContext) {
         String email = securityContext.getUserPrincipal().getName();
         User user = userRepository.findByEmail(email);
+
         UserResponseDTO dto = new UserResponseDTO(user);
-        dto.urls = shortUrlRepository.findByUser(user);
+        List<ShortURL> urls = shortUrlRepository.findByUser(user);
+        dto.urls = urls != null ? urls : Collections.emptyList();
+
         dto.urlsCount = shortUrlRepository.countByUserId(user.id);
+        System.out.println("Login: " + dto.roles + " - " + dto.username);
+
+
 
         return Response.ok(dto).build();
     }

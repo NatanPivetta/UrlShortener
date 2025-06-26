@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile.jvm
+    ports:
+      - "8086:8086"
+    container_name: auth-service
+    networks:
+      - shortener-net
+
+  kafkaconsumers:
+    build:
+      context: ./kafkaconsumers
+      dockerfile: Dockerfile.jvm
+    ports:
+      - "8085:8085"
+    container_name: kafkaconsumers
+    networks:
+      - shortener-net
+
+  urlshortener:
+    build:
+      context: ./urlshortener
+      dockerfile: Dockerfile.jvm
+    ports:
+      - "8084:8084"
+    container_name: urlshortener
+    networks:
+      - shortener-net
+
+
+networks:
+  shortener-net:
+    driver: bridge

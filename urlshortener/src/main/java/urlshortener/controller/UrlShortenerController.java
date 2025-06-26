@@ -8,7 +8,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-import model.Role;
+import urlshortener.model.Role;
 import urlshortener.model.User;
 import urlshortener.repository.ShortUrlRepository;
 import urlshortener.repository.UrlKeyRepository;
