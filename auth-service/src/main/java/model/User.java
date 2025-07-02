@@ -1,25 +1,17 @@
 package model;
 
-
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.*;
+import io.quarkus.mongodb.panache.common.MongoEntity;
+import io.quarkus.mongodb.panache.PanacheMongoEntity;
 
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity
-@Table(name = "users")
-public class User extends PanacheEntity {
+@MongoEntity(collection = "users")
+public class User extends PanacheMongoEntity {
 
-    @Column(unique = true, nullable = false)
     public String email;
-
-    @Column(nullable = false)
+    public String username;
     public String passwordHash;
-
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role")
-    public Set<Role> roles = new HashSet<>();
+    public String role;
+    public Long urlCount;
 }

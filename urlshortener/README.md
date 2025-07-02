@@ -55,8 +55,6 @@ If you want to learn more about building native executables, please consult <htt
 
 ## Related Guides
 
-- Hibernate ORM with Panache and Kotlin ([guide](https://quarkus.io/guides/hibernate-orm-panache-kotlin)): Define your
-  persistent model in Hibernate ORM with Panache
 - SmallRye OpenAPI ([guide](https://quarkus.io/guides/openapi-swaggerui)): Document your REST APIs with OpenAPI - comes
   with Swagger UI
 - RESTEasy Classic ([guide](https://quarkus.io/guides/resteasy)): REST endpoint framework implementing Jakarta REST and

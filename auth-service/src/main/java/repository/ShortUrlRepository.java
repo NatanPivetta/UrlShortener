@@ -1,33 +1,33 @@
 package repository;
 
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
+
+import model.User;
+import io.quarkus.mongodb.panache.PanacheMongoRepository;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.ApplicationScoped;
 import model.ShortURL;
 import model.User;
+import org.bson.types.ObjectId;
 
 import java.util.List;
 
 @ApplicationScoped
-public class ShortUrlRepository implements PanacheRepository<ShortURL> {
+public class ShortUrlRepository implements PanacheMongoRepository<ShortURL> {
 
     public ShortURL findByOriginalUrl(String originalUrl) {
         return find("originalUrl", originalUrl).firstResult();
     }
 
     public ShortURL findByKey(String chave) {
-        return find("urlKey.chave = ?1", chave).firstResult();
+        return find("short_key = ?1", chave).firstResult();
     }
 
-    public void save(ShortURL shortUrl) {
-        shortUrl.persist();
-    }
-
-    public long countByUserId(Long userId) {
+    public long countByUserId(ObjectId userId) {
         return count("user.id", userId);
     }
 
     public List<ShortURL> findByUser(User user) {
-        return find("user", user).list();
+        return find("userId", user.id).list();
     }
 
 

@@ -1,10 +1,7 @@
 package kafka;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import java.sql.Timestamp;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 
 public class AccessEvent {
     public String chave;

@@ -1,15 +1,13 @@
 package repository;
 
 
+import io.quarkus.mongodb.panache.PanacheMongoRepository;
 import model.User;
-import model.ShortURL;
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
-import java.util.List;
-
 @ApplicationScoped
-public class UserRepository implements PanacheRepository<User> {
+public class UserRepository implements PanacheMongoRepository<User> {
     public User findByEmail(String email) {
         return find("email", email).firstResult();
     }

@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDTO {
-    public String userEmail;
+    public String email;
+    public String username;
     public String passwordHash;
     public int urlCount;
-    public List<String> roles = new ArrayList<>();
+    public String role;
     public UserDTO() {}
 }

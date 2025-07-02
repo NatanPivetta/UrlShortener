@@ -5,7 +5,6 @@ import dto.RegisterRequest;
 import dto.UserDTO;
 import dto.UserResponseDTO;
 import io.quarkus.security.Authenticated;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -54,7 +53,6 @@ public class AuthController {
 
     @POST
     @Path("/register")
-    @Transactional
     public Response register(RegisterRequest registerRequest) {
         if (userRepository.findByEmail(registerRequest.email) != null) {
             return Response.status(Response.Status.CONFLICT)
@@ -62,9 +60,10 @@ public class AuthController {
                     .build();
         }
         UserDTO dto = new UserDTO();
-        dto.userEmail =  registerRequest.email;
+        dto.email =  registerRequest.email;
+        dto.username = registerRequest.username;
         dto.passwordHash = passwordService.hashPassword(registerRequest.password);
-        dto.roles.add(Role.FREE.name()); // padrão
+        dto.role = Role.FREE.name();
 
         try{
             String json = objectMapper.writeValueAsString(dto);
@@ -81,19 +80,21 @@ public class AuthController {
 
     @POST
     @Path("/login")
-    @Transactional
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(RegisterRequest registerRequest) {
+
         User user = userRepository.findByEmail(registerRequest.email);
         if (user == null) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
         if(passwordService.checkPassword(registerRequest.password, user.passwordHash)) {
             TokenResponse tk = new TokenResponse(jwt.generateToken(user));
-                return Response.status(Response.Status.OK)
+            System.out.println("Login para: " + registerRequest.email);
+            return Response.status(Response.Status.OK)
                         .entity(tk)
                         .build();
         }
+        System.out.println("Erro ao tentar fazer login para: " + registerRequest.email);
         return Response.status(Response.Status.UNAUTHORIZED).build();
 
     }
@@ -104,14 +105,15 @@ public class AuthController {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getCurrentUser(@Context SecurityContext securityContext) {
         String email = securityContext.getUserPrincipal().getName();
+        System.out.println("Buscando informações do user: " + email);
         User user = userRepository.findByEmail(email);
 
         UserResponseDTO dto = new UserResponseDTO(user);
         List<ShortURL> urls = shortUrlRepository.findByUser(user);
         dto.urls = urls != null ? urls : Collections.emptyList();
 
-        dto.urlsCount = shortUrlRepository.countByUserId(user.id);
-        System.out.println("Login: " + dto.roles + " - " + dto.username);
+        dto.urlsCount = user.urlCount;
+        System.out.println("Login: " + dto.role + " - " + dto.username);
 
 
 
@@ -121,36 +123,30 @@ public class AuthController {
     @POST
     @Path("/upgrade")
     @Authenticated
-    @Transactional
     public Response upgrade(@Context SecurityContext securityContext) {
         String email = securityContext.getUserPrincipal().getName();
         User user = userRepository.findByEmail(email);
+
         if (user == null) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity("Usuário não encontrado.")
                     .build();
         }
 
-        List<Role> roleOrder = List.of(Role.FREE, Role.SILVER, Role.GOLD);
-        Role nextRole = roleOrder.stream()
-                .filter(role -> !user.roles.contains(role))
-                .findFirst()
-                .orElse(null);
-
-        if (nextRole == null) {
-            return Response.ok("Usuário já possui todas as roles.").build();
+        List<String> rolesOrder = List.of("FREE", "SILVER", "GOLD");
+        int currentIndex = rolesOrder.indexOf(user.role);
+        if (currentIndex == -1 || currentIndex == rolesOrder.size() - 1) {
+            return Response.ok("Usuário já possui o plano mais alto.").build();
         }
 
-//        user.roles.clear();
-        user.roles.add(nextRole);
-        userRepository.save(user);
-        System.out.println("Role atualizada: " + user.email + " - " + user.roles);
+        String nextRole = rolesOrder.get(currentIndex + 1);
+        user.role = nextRole;
+        userRepository.update(user);
 
-        return Response.ok(Response.Status.OK)
-                .entity("Role Atualizada para: " + nextRole)
-                .build();
-
+        System.out.println("Role atualizada: " + user.email + " - " + user.role);
+        return Response.ok("Plano atualizado para: " + nextRole).build();
     }
+
 
 
     @GET

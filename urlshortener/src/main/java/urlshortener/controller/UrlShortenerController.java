@@ -8,14 +8,14 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
-import urlshortener.model.Role;
 import urlshortener.model.User;
 import urlshortener.repository.ShortUrlRepository;
-import urlshortener.repository.UrlKeyRepository;
 import urlshortener.repository.UserRepository;
 import urlshortener.service.KeyGeneratorService;
 import urlshortener.service.UrlShortenerService;
 import urlshortener.util.UrlRequest;
+
+import java.util.Random;
 
 @Path("/shortener")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -26,9 +26,6 @@ public class UrlShortenerController {
     UrlShortenerService service;
 
     @Inject
-    UrlKeyRepository urlKeyRepository;
-
-    @Inject
     ShortUrlRepository shortUrlRepository;
 
     @Inject
@@ -37,93 +34,88 @@ public class UrlShortenerController {
     @Inject
     KeyGeneratorService kgs;
 
-
     @POST
     @Path("/shorten")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
     @Authenticated
     public Response shortenUrl(UrlRequest request, @Context SecurityContext ctx) {
-
-        System.out.println("originalUrl: " + request.originalUrl);
-        System.out.println("customKey: " + request.customKey);
-
-
-
-        if(urlKeyRepository.findAvailableKeys().size() < 1000){
-            kgs.generateKeys(1000);
-        }
-
         if (ctx.getUserPrincipal() == null) {
-            System.out.println("User: " + ctx.getUserPrincipal());
             return Response.status(Response.Status.UNAUTHORIZED).entity("Usuário não autenticado").build();
-        }
-
-        if(shortUrlRepository.findByOriginalUrl(request.originalUrl)  != null){
-            return Response.status(Response.Status.CONFLICT)
-                    .entity("Url já encurtada no sistema: " + request.originalUrl)
-                    .build();
-        }
-        if(urlKeyRepository.findByKey(request.customKey)  != null){
-            return Response.status(Response.Status.CONFLICT)
-                    .entity("Chave já utilizada no sistema: " + request.customKey)
-                    .build();
         }
 
         String userEmail = ctx.getUserPrincipal().getName();
         User user = userRepository.findByEmail(userEmail);
-        String role = user.roles.contains(Role.GOLD) ? "GOLD"
-                : user.roles.contains(Role.SILVER) ? "SILVER"
-                : "FREE";
-
-        if (request.originalUrl == null || request.originalUrl.isBlank()) {
-            return Response
-                    .status(Response.Status.BAD_REQUEST)
-                    .entity("URL original é obrigatória")
-                    .build();
+        if (user == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Usuário não encontrado").build();
         }
 
-        if(!countUrls(userEmail, role)){
-            return Response
-                    .status(Response.Status.FORBIDDEN)
+        String role = user.role;
+
+        if (request.originalUrl == null || request.originalUrl.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("URL original é obrigatória").build();
+        }
+
+        if (!countUrls(userEmail, role)) {
+            return Response.status(Response.Status.FORBIDDEN)
                     .entity("Limite de URLs encurtadas atingido para o plano: " + role)
                     .build();
         }
 
-        if (request.customKey != null && !request.customKey.isBlank()) {
-            return service.shortenUrlCustom(request.originalUrl, request.customKey, user);
-        } else {
-            return service.shortenUrl(request.originalUrl, user);
+        if (shortUrlRepository.findByOriginalUrl(request.originalUrl) != null) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("URL já encurtada no sistema: " + request.originalUrl)
+                    .build();
         }
+
+        // Se o usuário forneceu uma chave customizada
+        if (request.customKey != null && !request.customKey.isBlank()) {
+            if (!request.customKey.matches("^[a-zA-Z0-9]{4,20}$")) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("Chave personalizada inválida").build();
+            }
+
+            if (shortUrlRepository.findByKey(request.customKey) != null) {
+                return Response.status(Response.Status.CONFLICT)
+                        .entity("Chave personalizada já está em uso: " + request.customKey)
+                        .build();
+            }
+
+            return service.shortenUrlCustom(request.originalUrl, request.customKey, user);
+        }
+
+        // Gera uma chave base62 única sob demanda
+        String generatedKey;
+        int attempt = 0;
+        do {
+            int random = new Random().nextInt(4,15);
+            generatedKey = kgs.generateKey(random);
+            attempt++;
+            // Segurança extra para evitar colisão (improvável, mas possível)
+        } while (shortUrlRepository.findByKey(generatedKey) != null && attempt < 5);
+
+        if (attempt == 5) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Falha ao gerar chave única para URL")
+                    .build();
+        }
+
+        return service.shortenUrlCustom(request.originalUrl, generatedKey, user);
     }
 
     @POST
     @Path("/unlink")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
     public Response unlinkUrl(String chave) {
         return service.unlink(chave);
     }
 
-
     @GET
     @Path("/testeauth")
     @Authenticated
-    @Produces(MediaType.APPLICATION_JSON)
     public String testAuth(@Context SecurityContext ctx) {
         return "Usuário autenticado: " + ctx.getUserPrincipal().getName();
     }
 
-
-
-
-    private boolean countUrls(String userEmail, String role){
-        System.out.println(userEmail + " - " + role);
+    private boolean countUrls(String userEmail, String role) {
         User user = userRepository.findByEmail(userEmail);
-        if (user == null) {
-            return false;
-        }
+        if (user == null) return false;
 
         long userUrlCount = shortUrlRepository.countByUserId(user.id);
 
@@ -135,6 +127,4 @@ public class UrlShortenerController {
 
         return userUrlCount < maxAllowed;
     }
-
-
 }

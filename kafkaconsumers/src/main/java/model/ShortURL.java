@@ -1,29 +1,37 @@
 package model;
 
-import jakarta.persistence.*;
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import model.URLKey;
-import model.User;
+import io.quarkus.mongodb.panache.PanacheMongoEntity;
+import io.quarkus.mongodb.panache.common.MongoEntity;
+import org.bson.codecs.pojo.annotations.BsonProperty;
+import org.bson.types.ObjectId;
 
-@Entity
-@Table(name= "short_url")
-public class ShortURL extends PanacheEntity {
+import java.time.Instant;
 
-    @Column(nullable = false, name="original_url")
+@MongoEntity(collection = "urls")
+public class ShortURL extends PanacheMongoEntity {
+
+    @BsonProperty("original_url")
     private String originalUrl;
 
-    @ManyToOne
-    @JoinColumn(name = "url_key_id", nullable = false, unique = true)
-    private URLKey urlKey;
+    @BsonProperty("short_key")
+    private String shortKey;
 
-    @Column(name = "numero_acessos")
-    private Long numeroAcessos = 0L;
+    @BsonProperty("user_id")
+    private ObjectId userId;
 
-    @ManyToOne
-    @JoinColumn(name="user_id")
-    public User user;
+    @BsonProperty("created_at")
+    private Instant createdAt;
 
+    public Long numeroAcessos = 0L;
+
+    @BsonProperty("status")
     private boolean status;
+
+    @BsonProperty("expires_at")
+    private Instant expiresAt;
+
+
+    // Getters e Setters
 
     public String getOriginalUrl() {
         return originalUrl;
@@ -33,21 +41,60 @@ public class ShortURL extends PanacheEntity {
         this.originalUrl = originalUrl;
     }
 
-    public URLKey getUrlKey() {
-        return urlKey;
+    public String getShortKey() {
+        return shortKey;
     }
 
-    public void setUrlKey(URLKey urlKey) {
-        this.urlKey = urlKey;
+    public void setShortKey(String shortKey) {
+        this.shortKey = shortKey;
+    }
+
+    public ObjectId getUserId() {
+        return userId;
+    }
+
+    public void setUserId(ObjectId userId) {
+        this.userId = userId;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Long getNumeroAcessos() {
         return numeroAcessos;
     }
+
     public void addAcesso() {
         this.numeroAcessos += 1;
     }
 
-    public void ativar(){this.status = true;}
-    public void desativar(){this.status = false;}
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void ativar() {
+        this.status = true;
+    }
+
+    public void desativar() {
+        this.status = false;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(Instant expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    public boolean isExpired(){
+        return expiresAt != null && expiresAt.isBefore(Instant.now());
+    }
+
 }

@@ -1,9 +1,6 @@
 package kafka;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class ShortenUrlEvent {
 
     public String originalUrl;

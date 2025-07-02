@@ -6,19 +6,14 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.UriBuilder;
 import urlshortener.dto.ShortUrlEvent;
 import urlshortener.model.ShortURL;
-import urlshortener.model.URLKey;
 import urlshortener.model.User;
 import urlshortener.repository.ShortUrlRepository;
-import urlshortener.repository.UrlKeyRepository;
 import urlshortener.util.UrlShortenerProducer;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Random;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @ApplicationScoped
 public class UrlShortenerServiceImpl implements UrlShortenerService {
@@ -30,112 +25,75 @@ public class UrlShortenerServiceImpl implements UrlShortenerService {
     ShortUrlRepository shortUrlRepository;
 
     @Inject
-    UrlKeyRepository urlKeyRepository;
-
-    @Inject
     UrlShortenerProducer producer;
 
     ObjectMapper mapper = new ObjectMapper();
 
-
-
-
-
-    private static final Random random = new Random();
-
-
     @Override
-    @Transactional
     public Response shortenUrl(String originalUrl, User user) {
+        if (originalUrl == null || originalUrl.isBlank()) {
+            throw new WebApplicationException("URL original é obrigatória.", 400);
+        }
+
         ShortUrlEvent event = new ShortUrlEvent();
         event.originalUrl = originalUrl;
+        event.userId = user.id.toString();
         event.userEmail = user.email;
         event.custom = false;
-
+        event.expiresAt = Instant.now().plus(365, ChronoUnit.DAYS).toString(); // Expiração padrão de 1 ano
 
         try {
             String json = mapper.writeValueAsString(event);
-            System.out.println("Enviando para o kafka: " + json);
+            System.out.println("[URL SHORTENER] Enviando para o Kafka: " + json);
             producer.send("url-shortener", json);
-
         } catch (Exception e) {
-            System.err.println("Erro ao converter DTO para JSON: " + e.getMessage());
+            System.err.println("[URL SHORTENER] Erro ao converter evento para JSON: " + e.getMessage());
+            throw new WebApplicationException("Erro interno ao processar a URL.", 500);
         }
-
 
         return Response.accepted().entity("URL em processamento.").build();
     }
 
     @Override
-    @Transactional
     public Response shortenUrlCustom(String originalUrl, String customKey, User user) {
         if (!customKey.matches("^[a-zA-Z0-9]{4,20}$")) {
-            throw new WebApplicationException("Chave inválida", 400);
+            throw new WebApplicationException("Chave personalizada inválida (mínimo 4, máximo 20 caracteres alfanuméricos).", 400);
         }
 
         ShortUrlEvent event = new ShortUrlEvent();
         event.originalUrl = originalUrl;
         event.chave = customKey;
+        event.userId = user.id.toString();
         event.userEmail = user.email;
         event.custom = true;
-
+        event.expiresAt = Instant.now().plus(365, ChronoUnit.DAYS).toString(); // Expiração padrão
         try {
             String json = mapper.writeValueAsString(event);
-            System.out.println("Enviando para o kafka: " + json);
+            System.out.println("[URL SHORTENER] Enviando URL personalizada para o Kafka: " + json);
             producer.send("url-shortener", json);
-
         } catch (Exception e) {
-            System.err.println("Erro ao converter DTO para JSON: " + e.getMessage());
+            System.err.println("[URL SHORTENER] Erro ao converter evento personalizado para JSON: " + e.getMessage());
+            throw new WebApplicationException("Erro interno ao processar a URL personalizada.", 500);
         }
 
         return Response.accepted().entity("URL personalizada em processamento.").build();
     }
 
-
     @Override
-    @Transactional
-    public Response unlink(String chave){
-
-        URLKey key = urlKeyRepository.findByKey(chave);
-        if (key == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Chave não encontrada")
-                    .build();
-        }
-
+    public Response unlink(String chave) {
         ShortURL shortURL = shortUrlRepository.findByKey(chave);
         if (shortURL == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Url não encontrada")
+                    .entity("Chave não encontrada.")
                     .build();
         }
 
         shortURL.desativar();
-        shortUrlRepository.save(shortURL);
-
-        key.desativar();
-        urlKeyRepository.save(key);
+        shortUrlRepository.persist(shortURL);
 
         return Response.ok()
-                .entity("Chave e URL desassociadas")
+                .entity("Chave e URL desativadas com sucesso.")
                 .build();
     }
 
-    private ShortURL criarShortUrl(String originalUrl, URLKey key, User user) {
-        ShortURL shortUrl = new ShortURL();
-        shortUrl.setOriginalUrl(originalUrl);
-        shortUrl.setUrlKey(key);
-        shortUrl.user = user;
-        shortUrl.ativar();
-        return shortUrl;
-    }
-
-    private URLKey criarUrlKey(String customKey ) {
-        URLKey customKeyURL = new URLKey();
-        customKeyURL.setChave(customKey);
-        customKeyURL.ativar();
-        customKeyURL.setData_criacao(Timestamp.valueOf(LocalDateTime.now()));
-        urlKeyRepository.save(customKeyURL);
-        return customKeyURL;
-    }
 }

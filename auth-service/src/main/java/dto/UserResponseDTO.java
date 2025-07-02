@@ -13,19 +13,11 @@ public class UserResponseDTO {
     public String username;
     public List<ShortURL> urls;
     public long urlsCount;
-    public List<String> roles;
+    public String role;
 
     public UserResponseDTO(User user) {
-        this.username = user.email;
-
-        // Converte Set<Role> para List<String>
-        Set<Role> userRoles = user.roles;
-        if (userRoles != null) {
-            this.roles = userRoles.stream()
-                    .map(Enum::name) // ou role.getName() se for private
-                    .collect(Collectors.toList());
-        } else {
-            this.roles = Collections.emptyList();
-        }
+        this.username = user.username;
+        this.role = user.role;
+        this.urlsCount = user.urlCount;
     }
 }

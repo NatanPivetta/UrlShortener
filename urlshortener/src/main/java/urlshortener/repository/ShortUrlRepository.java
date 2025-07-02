@@ -1,25 +1,22 @@
 package urlshortener.repository;
 
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.mongodb.panache.PanacheMongoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.bson.types.ObjectId;
 import urlshortener.model.ShortURL;
 
 @ApplicationScoped
-public class ShortUrlRepository implements PanacheRepository<ShortURL> {
+public class ShortUrlRepository implements PanacheMongoRepository<ShortURL> {
 
     public ShortURL findByOriginalUrl(String originalUrl) {
         return find("originalUrl", originalUrl).firstResult();
     }
 
     public ShortURL findByKey(String chave) {
-        return find("urlKey.chave = ?1", chave).firstResult();
+        return find("short_key = ?1", chave).firstResult();
     }
 
-    public void save(ShortURL shortUrl) {
-        shortUrl.persist();
-    }
-
-    public long countByUserId(Long userId) {
+    public long countByUserId(ObjectId userId) {
         return count("user.id", userId);
     }
 

@@ -10,14 +10,13 @@ repositories {
 
 dependencies {
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
-    implementation 'io.quarkus:quarkus-hibernate-orm-panache'
+    implementation 'io.quarkus:quarkus-mongodb-panache'
     implementation 'io.quarkus:quarkus-smallrye-openapi'
     implementation 'io.quarkus:quarkus-rest'
     implementation 'io.quarkus:quarkus-rest-jackson'
     implementation 'io.quarkus:quarkus-rest-client'
     implementation 'io.quarkus:quarkus-rest-client-jackson'
     implementation 'io.quarkus:quarkus-arc'
-    implementation 'io.quarkus:quarkus-jdbc-mysql'
     implementation 'io.quarkus:quarkus-redis-client:3.15.0'
     implementation("io.quarkus:quarkus-scheduler")
     implementation 'io.quarkus:quarkus-smallrye-reactive-messaging-kafka:3.14.4'
@@ -31,6 +30,14 @@ dependencies {
     testImplementation 'io.rest-assured:xml-path:5.3.0'
     testImplementation 'io.rest-assured:json-schema-validator:5.3.0'
 }
+
+configurations.configureEach {
+    exclude group: 'io.quarkus', module: 'quarkus-agroal'
+    exclude group: 'io.quarkus', module: 'quarkus-hibernate-orm'
+    exclude group: 'io.quarkus', module: 'quarkus-hibernate-orm-panache'
+    exclude group: 'io.quarkus', module: 'quarkus-jdbc-mysql'
+}
+
 
 group 'natanpivetta'
 version '1.0-SNAPSHOT'

@@ -6,17 +6,14 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import kafka.ShortenUrlEvent;
 import model.ShortURL;
-import model.URLKey;
 import model.User;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import repository.ShortUrlRepository;
-import repository.UrlKeyRepository;
 import repository.UserRepository;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Random;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 
 @ApplicationScoped
 public class ShortenUrlConsumer {
@@ -27,54 +24,36 @@ public class ShortenUrlConsumer {
     @Inject
     ShortUrlRepository shortUrlRepository;
 
-    @Inject
-    UrlKeyRepository urlKeyRepository;
 
     @Incoming("url-shortener")
     @Blocking
-    @Transactional
     public void consumeShortenUrl(ShortenUrlEvent event) {
         System.out.println("Recebido do tópico url-shortener: " + event.originalUrl);
 
         User user = userRepository.findByEmail(event.userEmail);
-
-
-        URLKey key;
-        if(!event.custom && event.chave == null){
-            List<URLKey> availableKeys = urlKeyRepository.findAvailableKeys();
-            // Engatilhar novas chaves caso lista esteja vazia ou pequena
-
-            Random random = new Random();
-            key = availableKeys.get(random.nextInt(availableKeys.size()));
-            key.ativar();
-        }else{
-            key = criarUrlKey(event.chave);
-            urlKeyRepository.save(key);
+        if (user == null) {
+            System.err.println("Usuário não encontrado: " + event.userEmail);
+            return;
         }
 
-        ShortURL shortURL = criarShortUrl(event.originalUrl, key, user);
+
+        ShortURL shortURL = criarShortUrl(event.originalUrl, event.chave, user);
         shortUrlRepository.save(shortURL);
 
 
         user.urlCount += 1;
-        user.persist();
+        user.update();
     }
 
-    private ShortURL criarShortUrl(String originalUrl, URLKey key, User user) {
+    private ShortURL criarShortUrl(String originalUrl, String key, User user) {
         ShortURL shortUrl = new ShortURL();
         shortUrl.setOriginalUrl(originalUrl);
-        shortUrl.setUrlKey(key);
-        shortUrl.user = user;
+        shortUrl.setShortKey(key);
+        shortUrl.setUserId(user.id);
+        shortUrl.setCreatedAt(Instant.now());
+        shortUrl.setExpiresAt(Instant.now().plus(365, ChronoUnit.DAYS));
         shortUrl.ativar();
         return shortUrl;
-    }
-
-    private URLKey criarUrlKey(String customKey ) {
-        URLKey customKeyURL = new URLKey();
-        customKeyURL.setChave(customKey);
-        customKeyURL.ativar();
-        customKeyURL.setData_criacao(Timestamp.valueOf(LocalDateTime.now()));
-        return customKeyURL;
     }
 }
 

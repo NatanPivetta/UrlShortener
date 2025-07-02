@@ -1,13 +1,13 @@
 package repository;
 
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import io.quarkus.mongodb.panache.PanacheMongoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.transaction.Transactional;
 import model.UrlAccess;
 
 
 @ApplicationScoped
-public class UrlAccessRepository implements PanacheRepository<UrlAccess> {
+
+public class UrlAccessRepository implements PanacheMongoRepository<UrlAccess> {
 
 
     public void save(UrlAccess access) {

@@ -9,17 +9,14 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import urlshortener.dto.UrlAccessDTO;
 import urlshortener.model.ShortURL;
-import urlshortener.model.URLKey;
 import urlshortener.util.AccessKafkaProducer;
 import urlshortener.util.RedisCacheService;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.core.Request;
 
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @ApplicationScoped
 public class RedirectServiceImpl implements RedirectService {
@@ -32,7 +29,6 @@ public class RedirectServiceImpl implements RedirectService {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    @Transactional
     public Response redirect(@PathParam("chave") String chave, HttpHeaders headers, UriInfo uriInfo, Request request) {
         System.out.println("Redirecting to " + chave);
 
@@ -41,7 +37,7 @@ public class RedirectServiceImpl implements RedirectService {
         }
 
         UrlAccessDTO dto = new UrlAccessDTO();
-        dto.timestamp = new Timestamp(System.currentTimeMillis());
+        dto.timestamp = Timestamp.from(Instant.now());
         dto.chave = chave;
         dto.method = request.getMethod();
         dto.ip = headers.getHeaderString("X-Forwarded-For");
@@ -52,7 +48,6 @@ public class RedirectServiceImpl implements RedirectService {
 
 
 
-        URLKey urlKey;
         ShortURL shortUrl;
 
         String location = null;
@@ -64,16 +59,17 @@ public class RedirectServiceImpl implements RedirectService {
             location = cachedUrl;
             statusCode = Response.Status.FOUND.getStatusCode();
         } else {
-            urlKey = URLKey.find("chave = ?1", chave).firstResult();
+            shortUrl = ShortURL.find("short_key = ?1", chave).firstResult();
+            System.out.println(shortUrl.getOriginalUrl());
 
-            if (urlKey == null || !urlKey.isStatus()) {
+            if (shortUrl == null || shortUrl.isStatus()) {
                 statusCode = Response.Status.NOT_FOUND.getStatusCode();
                 errorMessage = "Chave não encontrada ou inativa";
-            } else if (urlKey.getData_validade().before(Timestamp.valueOf(LocalDateTime.now()))) {
+            } else if (shortUrl.isExpired()) {
                 statusCode = Response.Status.GONE.getStatusCode();
                 errorMessage = "Chave expirada";
             } else {
-                shortUrl = ShortURL.find("urlKey = ?1", urlKey).firstResult();
+                shortUrl = ShortURL.find("short_key = ?1", chave).firstResult();
                 if (shortUrl == null) {
                     statusCode = Response.Status.NOT_FOUND.getStatusCode();
                     errorMessage = "URL encurtada não encontrada";

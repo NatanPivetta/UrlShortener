@@ -21,15 +21,15 @@ public class UserConsumer {
 
     @Incoming("user-register")
     @Blocking
-    @Transactional
     public void consumeUserRegister(UserRegisterEvent event) {
-        System.out.println("Consuming user register event: " + event.userEmail);
+        System.out.println("Consuming user register event: " + event.email);
 
         User user = new User();
-        user.email = event.userEmail;
+        user.email = event.email;
         user.passwordHash = event.passwordHash;
-        user.urlCount = 0;
-        user.roles = event.roles;
+        user.urlCount = 0L;
+        user.role = event.role;
+        user.username = event.username;
 
         userRepository.save(user);
     }

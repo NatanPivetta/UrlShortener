@@ -2,6 +2,7 @@ package urlshortener.dto;
 
 
 import java.sql.Timestamp;
+import java.time.Instant;
 
 public class UrlAccessDTO {
     public String chave;

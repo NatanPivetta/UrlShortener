@@ -9,13 +9,13 @@ echo  Iniciando builds em paralelo
 echo =============================
 
 REM Build do urlshortener
-start "urlshortener" cmd /c "cd urlshortener && gradlew clean build -x test"
+start "urlshortener" cmd /k "cd urlshortener && gradlew clean build -x test"
 
 REM Build do kafkaconsumers
-start "kafkaconsumers" cmd /c "cd kafkaconsumers && gradlew clean build -x test"
+start "kafkaconsumers" cmd /k "cd kafkaconsumers && gradlew clean build -x test"
 
 REM Build do auth-service
-start "auth-service" cmd /c "cd auth-service && gradlew clean build -x test"
+start "auth-service" cmd /k "cd auth-service && gradlew clean build -x test"
 
 echo =============================
 echo  Builds em execução nas janelas abertas...
